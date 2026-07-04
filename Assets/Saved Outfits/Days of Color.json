@@ -1,0 +1,49 @@
+{
+  "outfit": {
+    "body": {
+      "dye": "(none,none)",
+      "name": "Rainbow_01"
+    },
+    "face": {
+      "dye": "(none,none)",
+      "name": "None"
+    },
+    "feet": {
+      "dye": "(none,none)",
+      "name": "None"
+    },
+    "hair": {
+      "dye": "(none,none)",
+      "name": "TopSharp"
+    },
+    "hat": {
+      "dye": "(none,none)",
+      "name": "None"
+    },
+    "height": -1.8718531131744385,
+    "horn": {
+      "dye": "(none,none)",
+      "name": "None"
+    },
+    "mask": {
+      "dye": "(none,none)",
+      "name": "Basic"
+    },
+    "neck": {
+      "dye": "(none,none)",
+      "name": "None"
+    },
+    "prop": {
+      "dye": "(none,none)",
+      "name": "AP30BirdPlush"
+    },
+    "scale": -0.03708037734031677,
+    "stance": 9,
+    "voice": 2,
+    "wing": {
+      "dye": "(blue_cyan,cyan_blue)",
+      "name": "ColorBrushShawl"
+    }
+  },
+  "tsm_capture_source": "memory"
+}
