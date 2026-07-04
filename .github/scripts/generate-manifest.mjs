@@ -9,6 +9,7 @@ const OWNER = "XeTrinityz";
 const REPO = "ThatSkyMod";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
+console.log("Has GitHub token:", !!GITHUB_TOKEN);
 
 const githubUserCache = new Map();
 
@@ -95,7 +96,9 @@ function resolveGitHubDisplayName(commit) {
     `/repos/${OWNER}/${REPO}/commits/${commit.sha}`,
   );
 
-  const login = commitInfo?.author?.login;
+  const login =
+  commitInfo?.author?.login ??
+  commitInfo?.committer?.login;
 
   if (!login) {
     return commit.author;
