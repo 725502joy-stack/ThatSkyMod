@@ -92,29 +92,29 @@ function resolveGitHubDisplayName(commit) {
     return commit?.author ?? null;
   }
 
+  console.log("Resolving:", commit.sha);
+
   const commitInfo = githubRequest(
     `/repos/${OWNER}/${REPO}/commits/${commit.sha}`,
   );
 
+  console.log("Commit API:", JSON.stringify(commitInfo, null, 2));
+
   const login =
-  commitInfo?.author?.login ??
-  commitInfo?.committer?.login;
+    commitInfo?.author?.login ??
+    commitInfo?.committer?.login;
+
+  console.log("Login:", login);
 
   if (!login) {
     return commit.author;
   }
 
-  if (githubUserCache.has(login)) {
-    return githubUserCache.get(login);
-  }
-
   const user = githubRequest(`/users/${login}`);
 
-  const displayName = user?.name || login;
+  console.log("User API:", JSON.stringify(user, null, 2));
 
-  githubUserCache.set(login, displayName);
-
-  return displayName;
+  return user?.name || login;
 }
 
 let existing = {};
