@@ -27,7 +27,7 @@ jobs:
 
       - name: Commit manifest
         run: |
-          if git diff --quiet Assets/manifest.json; then
+          if git diff --quiet -- Assets/manifest.json && git ls-files --error-unmatch Assets/manifest.json >/dev/null 2>&1; then
             echo "Manifest unchanged."
             exit 0
           fi
