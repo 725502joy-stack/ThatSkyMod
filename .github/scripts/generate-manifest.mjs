@@ -5,14 +5,6 @@ import { join } from "node:path";
 const ASSETS_DIR = "Assets";
 const OUT_FILE = `${ASSETS_DIR}/manifest.json`;
 
-const OWNER = "XeTrinityz";
-const REPO = "ThatSkyMod";
-
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
-console.log("Has GitHub token:", !!GITHUB_TOKEN);
-
-const githubUserCache = new Map();
-
 function walk(dir) {
   const files = [];
   for (const entry of readdirSync(dir)) {
@@ -27,33 +19,14 @@ function walk(dir) {
 }
 
 function gitLog(path) {
-  // One line per commit, newest first:
-  // <sha>|<author date ISO>|<author name>|<parent hashes>
-  const out = execFileSync(
-    "git",
-    [
-      "log",
-      "--follow",
-      "--no-merges",
-      "--format=%H|%aI|%an|%P",
-      "--",
-      path,
-    ],
-    {
-      encoding: "utf8",
-    },
-  ).trim();
-
+  // One line per commit, newest first: <author date ISO>|<author name>|<parent hashes>
+  const out = execFileSync("git", ["log", "--follow", "--no-merges", "--format=%aI|%an|%P", "--", path], {
+    encoding: "utf8",
+  }).trim();
   return out
     ? out.split("\n").map((line) => {
-        const [sha, date, author, parents = ""] = line.split("|");
-
-        return {
-          sha,
-          date,
-          author,
-          parents: parents ? parents.split(" ") : [],
-        };
+        const [date, author, parents = ""] = line.split("|");
+        return { date, author, parents: parents ? parents.split(" ") : [] };
       })
     : [];
 }
@@ -69,63 +42,6 @@ export function selectContributionFromHistory(history) {
   return history[history.length - 1] ?? null;
 }
 
-function githubRequest(path) {
-  if (!GITHUB_TOKEN) {
-    return null;
-  }
-
-  const response = execFileSync(
-    "curl",
-    [
-      "-i",
-      "-H",
-      "Accept: application/vnd.github+json",
-      "-H",
-      `Authorization: Bearer ${GITHUB_TOKEN}`,
-      `https://api.github.com${path}`,
-    ],
-    {
-      encoding: "utf8",
-    },
-  );
-
-  console.log(response);
-
-  const body = response.split("\r\n\r\n").pop();
-
-  return JSON.parse(body);
-}
-
-function resolveGitHubDisplayName(commit) {
-  if (!commit?.sha || !GITHUB_TOKEN) {
-    return commit?.author ?? null;
-  }
-
-  console.log("Resolving:", commit.sha);
-
-  const commitInfo = githubRequest(
-    `/repos/${OWNER}/${REPO}/commits/${commit.sha}`,
-  );
-
-  console.log("Commit API:", JSON.stringify(commitInfo, null, 2));
-
-  const login =
-    commitInfo?.author?.login ??
-    commitInfo?.committer?.login;
-
-  console.log("Login:", login);
-
-  if (!login) {
-    return commit.author;
-  }
-
-  const user = githubRequest(`/users/${login}`);
-
-  console.log("User API:", JSON.stringify(user, null, 2));
-
-  return user?.name || login;
-}
-
 let existing = {};
 if (existsSync(OUT_FILE)) {
   try {
@@ -139,22 +55,17 @@ const items = {};
 const files = walk(ASSETS_DIR)
   .filter((f) => f !== OUT_FILE)
   .sort();
-
 for (const file of files) {
   const log = gitLog(file);
-  if (log.length === 0) continue;
-
+  if (log.length === 0) continue; // untracked file
   const updated = log[0].date;
   const contribution = selectContributionFromHistory(log);
-
   const added = contribution?.date ?? log[log.length - 1].date;
-  const author = resolveGitHubDisplayName(contribution);
-
+  const author = contribution?.author ?? null;
   const prev = existing[file] ?? {};
-
   items[file] = {
     ...(prev.description ? { description: prev.description } : {}),
-    author: prev.author ?? author,
+    author: prev.author ?? author, // manual override wins
     added,
     updated,
     ...(prev.rating != null ? { rating: prev.rating } : {}),
