@@ -1,0 +1,38 @@
+name: Update community manifest
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - "Assets/**"
+      - "!Assets/manifest.json"
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate manifest
+        run: node .github/scripts/generate-manifest.mjs
+
+      - name: Commit manifest
+        run: |
+          if git diff --quiet Assets/manifest.json; then
+            echo "Manifest unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Assets/manifest.json
+          git commit -m "Update community manifest"
+          git push
