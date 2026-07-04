@@ -69,7 +69,6 @@ export function selectContributionFromHistory(history) {
   return history[history.length - 1] ?? null;
 }
 
-async function githubRequest(path) {
 function githubRequest(path) {
   if (!GITHUB_TOKEN) {
     return null;
@@ -78,7 +77,7 @@ function githubRequest(path) {
   const response = execFileSync(
     "curl",
     [
-      "-i", // include HTTP headers
+      "-i",
       "-H",
       "Accept: application/vnd.github+json",
       "-H",
