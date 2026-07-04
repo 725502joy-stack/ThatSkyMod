@@ -20,7 +20,7 @@ function walk(dir) {
 
 function gitLog(path) {
   // One line per commit, newest first: <author date ISO>|<author name>|<parent hashes>
-  const out = execFileSync("git", ["log", "--follow", "--format=%aI|%an|%P", "--", path], {
+  const out = execFileSync("git", ["log", "--follow", "--no-merges", "--format=%aI|%an|%P", "--", path], {
     encoding: "utf8",
   }).trim();
   return out
@@ -31,15 +31,15 @@ function gitLog(path) {
     : [];
 }
 
-export function selectAuthorFromHistory(history) {
+export function selectContributionFromHistory(history) {
   for (let index = history.length - 1; index >= 0; index -= 1) {
     const entry = history[index];
     if (entry.parents.length <= 1) {
-      return entry.author;
+      return entry;
     }
   }
 
-  return history[history.length - 1]?.author ?? null;
+  return history[history.length - 1] ?? null;
 }
 
 let existing = {};
@@ -59,8 +59,9 @@ for (const file of files) {
   const log = gitLog(file);
   if (log.length === 0) continue; // untracked file
   const updated = log[0].date;
-  const added = log[log.length - 1].date;
-  const author = selectAuthorFromHistory(log);
+  const contribution = selectContributionFromHistory(log);
+  const added = contribution?.date ?? log[log.length - 1].date;
+  const author = contribution?.author ?? null;
   const prev = existing[file] ?? {};
   items[file] = {
     ...(prev.description ? { description: prev.description } : {}),
