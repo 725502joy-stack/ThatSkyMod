@@ -19,10 +19,27 @@ function walk(dir) {
 }
 
 function gitLog(path) {
-  const out = execFileSync("git", ["log", "--follow", "--format=%aI|%an", "--", path], {
+  // One line per commit, newest first: <author date ISO>|<author name>|<parent hashes>
+  const out = execFileSync("git", ["log", "--follow", "--format=%aI|%an|%P", "--", path], {
     encoding: "utf8",
   }).trim();
-  return out ? out.split("\n").map((line) => line.split("|")) : [];
+  return out
+    ? out.split("\n").map((line) => {
+        const [date, author, parents = ""] = line.split("|");
+        return { date, author, parents: parents ? parents.split(" ") : [] };
+      })
+    : [];
+}
+
+export function selectAuthorFromHistory(history) {
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    const entry = history[index];
+    if (entry.parents.length <= 1) {
+      return entry.author;
+    }
+  }
+
+  return history[history.length - 1]?.author ?? null;
 }
 
 let existing = {};
@@ -41,8 +58,9 @@ const files = walk(ASSETS_DIR)
 for (const file of files) {
   const log = gitLog(file);
   if (log.length === 0) continue; // untracked file
-  const [updated] = log[0];
-  const [added, author] = log[log.length - 1];
+  const updated = log[0].date;
+  const added = log[log.length - 1].date;
+  const author = selectAuthorFromHistory(log);
   const prev = existing[file] ?? {};
   items[file] = {
     ...(prev.description ? { description: prev.description } : {}),
