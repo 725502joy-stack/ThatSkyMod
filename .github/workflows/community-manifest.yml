@@ -24,6 +24,8 @@ jobs:
 
       - name: Generate manifest
         run: node .github/scripts/generate-manifest.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit manifest
         run: |
