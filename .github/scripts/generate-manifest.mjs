@@ -68,31 +68,22 @@ export function selectContributionFromHistory(history) {
   return history[history.length - 1] ?? null;
 }
 
-function githubRequest(path) {
-  if (!GITHUB_TOKEN) {
+async function githubRequest(path) {
+  if (!GITHUB_TOKEN) return null;
+
+  const response = await fetch(`https://api.github.com${path}`, {
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${GITHUB_TOKEN}`,
+    },
+  });
+
+  if (!response.ok) {
+    console.error(await response.text());
     return null;
   }
 
-  try {
-    const response = execFileSync(
-      "curl",
-      [
-        "-fsSL",
-        "-H",
-        "Accept: application/vnd.github+json",
-        "-H",
-        `Authorization: Bearer ${GITHUB_TOKEN}`,
-        `https://api.github.com${path}`,
-      ],
-      {
-        encoding: "utf8",
-      },
-    );
-
-    return JSON.parse(response);
-  } catch {
-    return null;
-  }
+  return await response.json();
 }
 
 function resolveGitHubDisplayName(commit) {
